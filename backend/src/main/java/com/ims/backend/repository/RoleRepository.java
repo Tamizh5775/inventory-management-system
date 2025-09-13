@@ -1,10 +1,10 @@
 package com.ims.backend.repository;
 
-import com.ims.backend.model.Supplier;
+import com.ims.backend.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SupplierRepository extends JpaRepository<Supplier, Long> {
-    Supplier findByName(String name);
+public interface RoleRepository extends JpaRepository<Role, Long> {
+    Role findByName(String name);
 }
