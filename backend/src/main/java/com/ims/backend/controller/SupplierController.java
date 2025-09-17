@@ -1,51 +1,74 @@
 package com.ims.backend.controller;
 
+import com.ims.backend.dto.SupplierDTO;
 import com.ims.backend.model.Supplier;
-import com.ims.backend.service.SupplierService;
+import com.ims.backend.repository.SupplierRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/suppliers")
-@CrossOrigin(origins = "*") // allow React frontend
+@CrossOrigin(origins = "*")
 public class SupplierController {
 
-    private final SupplierService supplierService;
+    private final SupplierRepository supplierRepository;
 
-    public SupplierController(SupplierService supplierService) {
-        this.supplierService = supplierService;
+    public SupplierController(SupplierRepository supplierRepository) {
+        this.supplierRepository = supplierRepository;
     }
 
-    // GET all suppliers
+    // ------------------- GET all suppliers -------------------
     @GetMapping
-    public List<Supplier> getAllSuppliers() {
-        return supplierService.getAllSuppliers();
+    public List<SupplierDTO> getAllSuppliers() {
+        return supplierRepository.findAll()
+                .stream()
+                .map(SupplierDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    // GET supplier by id
+    // ------------------- GET supplier by ID -------------------
     @GetMapping("/{id}")
-    public ResponseEntity<Supplier> getSupplierById(@PathVariable Long id) {
-        return ResponseEntity.ok(supplierService.getSupplierById(id));
+    public ResponseEntity<SupplierDTO> getSupplierById(@PathVariable Long id) {
+        return supplierRepository.findById(id)
+                .map(SupplierDTO::fromEntity)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // CREATE supplier
+
+    // ------------------- CREATE new supplier -------------------
     @PostMapping
-    public ResponseEntity<Supplier> createSupplier(@RequestBody Supplier supplier) {
-        return ResponseEntity.ok(supplierService.saveSupplier(supplier));
+    public ResponseEntity<SupplierDTO> createSupplier(@RequestBody Supplier supplier) {
+        Supplier savedSupplier = supplierRepository.save(supplier);
+        return ResponseEntity.ok(SupplierDTO.fromEntity(savedSupplier));
     }
 
-    // UPDATE supplier
+    // ------------------- UPDATE supplier -------------------
     @PutMapping("/{id}")
-    public ResponseEntity<Supplier> updateSupplier(@PathVariable Long id, @RequestBody Supplier supplier) {
-        return ResponseEntity.ok(supplierService.updateSupplier(id, supplier));
+    public ResponseEntity<SupplierDTO> updateSupplier(@PathVariable Long id, @RequestBody Supplier supplier) {
+        Optional<Supplier> updatedSupplier = supplierRepository.findById(id)
+                .map(existing -> {
+                    existing.setName(supplier.getName());
+                    existing.setContactNumber(supplier.getContactNumber());
+                    existing.setAddress(supplier.getAddress());
+                    return supplierRepository.save(existing);
+                });
+        return updatedSupplier
+                .map(s -> ResponseEntity.ok(SupplierDTO.fromEntity(s)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // DELETE supplier
+    // ------------------- DELETE supplier -------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteSupplier(@PathVariable Long id) {
-        supplierService.deleteSupplier(id);
-        return ResponseEntity.ok("Supplier deleted successfully");
+        if (supplierRepository.existsById(id)) {
+            supplierRepository.deleteById(id);
+            return ResponseEntity.ok("Supplier deleted successfully");
+        }
+        return ResponseEntity.notFound().build();
     }
 }

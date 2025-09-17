@@ -1,11 +1,13 @@
 package com.ims.backend.controller;
 
+import com.ims.backend.dto.ProductDTO;
 import com.ims.backend.model.Product;
 import com.ims.backend.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -18,46 +20,65 @@ public class ProductController {
         this.productService = productService;
     }
 
-    // GET all products
+    // ------------------- GET all products -------------------
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public List<ProductDTO> getAllProducts() {
+        return productService.getAllProducts()
+                .stream()
+                .map(ProductDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    // GET product by id
+    // ------------------- GET product by ID -------------------
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        return ResponseEntity.ok(productService.getProductById(id));
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
+        return productService.getProductById(id)
+                .map(ProductDTO::fromEntity)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // CREATE new product
+    // ------------------- CREATE new product -------------------
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        return ResponseEntity.ok(productService.saveProduct(product));
+    public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product) {
+        Product savedProduct = productService.saveProduct(product);
+        return ResponseEntity.ok(ProductDTO.fromEntity(savedProduct));
     }
 
-    // UPDATE product
+    // ------------------- UPDATE product -------------------
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        return ResponseEntity.ok(productService.updateProduct(id, product));
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        return productService.updateProduct(id, product)
+                .map(ProductDTO::fromEntity)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // DELETE product
+    // ------------------- DELETE product -------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+        boolean deleted = productService.deleteProduct(id);
+        if (!deleted) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok("Product deleted successfully");
     }
 
-    // SEARCH product by keyword
+    // ------------------- SEARCH products -------------------
     @GetMapping("/search")
-    public List<Product> searchProducts(@RequestParam String keyword) {
-        return productService.searchProducts(keyword);
+    public List<ProductDTO> searchProducts(@RequestParam String keyword) {
+        return productService.searchProducts(keyword)
+                .stream()
+                .map(ProductDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    // LOW STOCK products
+    // ------------------- LOW STOCK products -------------------
     @GetMapping("/low-stock")
-    public List<Product> getLowStockProducts(@RequestParam(defaultValue = "5") int threshold) {
-        return productService.getLowStockProducts(threshold);
+    public List<ProductDTO> getLowStockProducts(@RequestParam(defaultValue = "5") int threshold) {
+        return productService.getLowStockProducts(threshold)
+                .stream()
+                .map(ProductDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 }

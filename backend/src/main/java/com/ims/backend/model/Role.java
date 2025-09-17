@@ -12,5 +12,6 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name; // ADMIN, MANAGER, STAFF
+    @Column(nullable = false, unique = true)
+    private String name; // e.g., "ADMIN", "MANAGER", "STAFF"
 }

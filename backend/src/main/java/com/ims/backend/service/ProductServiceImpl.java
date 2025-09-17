@@ -5,6 +5,7 @@ import com.ims.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -21,9 +22,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProductById(Long id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+    public Optional<Product> getProductById(Long id) {
+        return productRepository.findById(id);
     }
 
     @Override
@@ -32,19 +32,24 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) {
-        Product existing = getProductById(id);
-        existing.setName(product.getName());
-        existing.setCategory(product.getCategory());
-        existing.setPrice(product.getPrice());
-        existing.setQuantity(product.getQuantity());
-        existing.setSupplier(product.getSupplier());
-        return productRepository.save(existing);
+    public Optional<Product> updateProduct(Long id, Product product) {
+        return productRepository.findById(id).map(existing -> {
+            existing.setName(product.getName());
+            existing.setCategory(product.getCategory());
+            existing.setPrice(product.getPrice());
+            existing.setQuantity(product.getQuantity());
+            existing.setSupplier(product.getSupplier());
+            return productRepository.save(existing);
+        });
     }
 
     @Override
-    public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+    public boolean deleteProduct(Long id) {
+        if (productRepository.existsById(id)) {
+            productRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     @Override
