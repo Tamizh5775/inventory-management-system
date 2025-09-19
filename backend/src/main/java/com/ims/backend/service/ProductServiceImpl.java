@@ -1,6 +1,8 @@
 package com.ims.backend.service;
 
+import com.ims.backend.dto.ProductRequestDTO;
 import com.ims.backend.model.Product;
+import com.ims.backend.model.Supplier;
 import com.ims.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
@@ -27,18 +29,27 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product saveProduct(Product product) {
+    public Product saveProduct(ProductRequestDTO dto) {
+        Product product = mapToEntity(dto);
         return productRepository.save(product);
     }
 
     @Override
-    public Optional<Product> updateProduct(Long id, Product product) {
+    public Optional<Product> updateProduct(Long id, ProductRequestDTO dto) {
         return productRepository.findById(id).map(existing -> {
-            existing.setName(product.getName());
-            existing.setCategory(product.getCategory());
-            existing.setPrice(product.getPrice());
-            existing.setQuantity(product.getQuantity());
-            existing.setSupplier(product.getSupplier());
+            existing.setName(dto.getName());
+            existing.setCategory(dto.getCategory());
+            existing.setPrice(dto.getPrice());
+            existing.setQuantity(dto.getQuantity());
+
+            if (dto.getSupplierId() != null) {
+                Supplier supplier = new Supplier();
+                supplier.setId(dto.getSupplierId());
+                existing.setSupplier(supplier);
+            } else {
+                existing.setSupplier(null);
+            }
+
             return productRepository.save(existing);
         });
     }
@@ -60,5 +71,21 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getLowStockProducts(int threshold) {
         return productRepository.findByQuantityLessThan(threshold);
+    }
+
+    // ------------------- Helper -------------------
+    private Product mapToEntity(ProductRequestDTO dto) {
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setCategory(dto.getCategory());
+        product.setPrice(dto.getPrice());
+        product.setQuantity(dto.getQuantity());
+
+        if (dto.getSupplierId() != null) {
+            Supplier supplier = new Supplier();
+            supplier.setId(dto.getSupplierId());
+            product.setSupplier(supplier);
+        }
+        return product;
     }
 }

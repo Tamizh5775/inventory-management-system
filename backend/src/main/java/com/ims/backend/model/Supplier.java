@@ -19,10 +19,10 @@ public class Supplier {
     private String address;
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonManagedReference("supplier-products")
     private List<Product> products;
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonManagedReference("supplier-purchases")
     private List<Purchase> purchases;
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 @Data
@@ -26,14 +27,14 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "supplier_id")
-    @JsonBackReference
+    @JsonBackReference("supplier-products")
     private Supplier supplier;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonManagedReference("product-sales")
     private List<Sales> sales;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonManagedReference("product-purchases")
     private List<Purchase> purchases;
 }

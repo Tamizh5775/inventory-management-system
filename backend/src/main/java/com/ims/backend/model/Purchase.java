@@ -3,6 +3,7 @@ package com.ims.backend.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -20,11 +21,11 @@ public class Purchase {
 
     @ManyToOne
     @JoinColumn(name = "product_id")
-    @JsonBackReference
+    @JsonBackReference("product-purchases") // matches Product.purchases
     private Product product;
 
     @ManyToOne
     @JoinColumn(name = "supplier_id")
-    @JsonBackReference
+    @JsonBackReference("supplier-purchases") // matches Supplier.purchases
     private Supplier supplier;
 }

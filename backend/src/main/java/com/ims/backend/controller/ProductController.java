@@ -1,11 +1,15 @@
 package com.ims.backend.controller;
 
 import com.ims.backend.dto.ProductDTO;
+import com.ims.backend.dto.ProductRequestDTO;
 import com.ims.backend.model.Product;
+import com.ims.backend.model.Supplier;
 import com.ims.backend.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,15 +44,17 @@ public class ProductController {
 
     // ------------------- CREATE new product -------------------
     @PostMapping
-    public ResponseEntity<ProductDTO> createProduct(@RequestBody Product product) {
-        Product savedProduct = productService.saveProduct(product);
-        return ResponseEntity.ok(ProductDTO.fromEntity(savedProduct));
+    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductRequestDTO dto) {
+        Product savedProduct = productService.saveProduct(dto);
+        return ResponseEntity
+                .created(URI.create("/api/products/" + savedProduct.getId()))
+                .body(ProductDTO.fromEntity(savedProduct));
     }
 
-    // ------------------- UPDATE product -------------------
     @PutMapping("/{id}")
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        return productService.updateProduct(id, product)
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long id,
+                                                    @Valid @RequestBody ProductRequestDTO dto) {
+        return productService.updateProduct(id, dto)
                 .map(ProductDTO::fromEntity)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -80,5 +86,21 @@ public class ProductController {
                 .stream()
                 .map(ProductDTO::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    // ------------------- Helper method -------------------
+    private Product mapToEntity(ProductRequestDTO dto) {
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setCategory(dto.getCategory());
+        product.setPrice(dto.getPrice());
+        product.setQuantity(dto.getQuantity());
+
+        if (dto.getSupplierId() != null) {
+            Supplier supplier = new Supplier();
+            supplier.setId(dto.getSupplierId());
+            product.setSupplier(supplier);
+        }
+        return product;
     }
 }
